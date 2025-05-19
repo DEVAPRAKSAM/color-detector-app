@@ -16,12 +16,20 @@ colors = load_colors()
 # Find the closest color name
 def get_color_name(R, G, B):
     minimum = float('inf')
-    closest_name = ""
+    closest_name = "Unknown"
+
     for i in range(len(colors)):
-        d = abs(R - int(colors.loc[i, "R"])) + abs(G - int(colors.loc[i, "G"])) + abs(B - int(colors.loc[i, "B"]))
-        if d < minimum:
-            minimum = d
-            closest_name = colors.loc[i, "color_name"]
+        try:
+            r = int(colors.loc[i, "R"])
+            g = int(colors.loc[i, "G"])
+            b = int(colors.loc[i, "B"])
+            d = abs(R - r) + abs(G - g) + abs(B - b)
+            if d < minimum:
+                minimum = d
+                closest_name = colors.loc[i, "color_name"]
+        except:
+            continue  # Skip rows with invalid data
+
     return closest_name
 
 # App UI
@@ -60,3 +68,9 @@ if uploaded_file is not None:
         )
 else:
     st.info("📤 Please upload an image to begin.")
+@st.cache_data
+def load_colors():
+    df = pd.read_csv("colors.csv")
+    df = df.dropna(subset=["R", "G", "B"])  # drop rows missing RGB
+    df = df[df[["R", "G", "B"]].applymap(lambda x: str(x).isdigit())]  # keep numeric-only
+    return df
